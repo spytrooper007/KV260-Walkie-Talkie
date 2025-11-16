@@ -1,8 +1,9 @@
 # Makefile for 2-Board Walkie-Talkie
 
 CC = gcc
-CFLAGS = -Wall -Wextra -O2 -pthread
-LDFLAGS = -lpthread -lopus
+CFLAGS = -Wall -Wextra -O2 -pthread \
+         -I$(STAGING_DIR)/usr/include
+LDFLAGS = -lpthread -L$(STAGING_DIR)/usr/lib -lopus
 
 TARGET = walkietalkie
 
