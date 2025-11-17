@@ -6,7 +6,7 @@
 #include <stddef.h>
 
 // DMA configuration
-#define DMA_BASE_ADDR       0xA0000000
+#define DMA_BASE_ADDR       0xA0010000
 #define DMA_MEM_BASE        0x70000000
 #define DMA_MEM_SIZE        0x02000000      // 32MB
 
