@@ -29,7 +29,7 @@ int opus_enc_init(opus_enc_ctx_t *ctx, int bitrate) {
     opus_encoder_ctl(ctx->encoder, OPUS_SET_PACKET_LOSS_PERC(5));
     
     ctx->initialized = true;
-    printf("Opus encoder initialized: %d Hz, %d ch, %d bps\n",
+    printf("Opus encoder initialised: %d Hz, %d ch, %d bps\n",
            SAMPLE_RATE, CHANNELS, bitrate);
     
     return 0;
@@ -42,7 +42,7 @@ int opus_encode_frame(opus_enc_ctx_t *ctx,
                       uint8_t *opus_out,
                       int max_bytes) {
     if (!ctx->initialized) {
-        fprintf(stderr, "Encoder not initialized\n");
+        fprintf(stderr, "Encoder not initialised\n");
         return -1;
     }
     
@@ -79,7 +79,7 @@ int opus_dec_init(opus_dec_ctx_t *ctx) {
     }
     
     ctx->initialized = true;
-    printf("Opus decoder initialized: %d Hz, %d ch\n",
+    printf("Opus decoder initialised: %d Hz, %d ch\n",
            SAMPLE_RATE, CHANNELS);
     
     return 0;
@@ -92,7 +92,7 @@ int opus_decode_frame(opus_dec_ctx_t *ctx,
                       int16_t *pcm_out,
                       int frame_size) {
     if (!ctx->initialized) {
-        fprintf(stderr, "Decoder not initialized\n");
+        fprintf(stderr, "Decoder not initialised\n");
         return -1;
     }
     
@@ -113,7 +113,7 @@ int opus_decode_lost(opus_dec_ctx_t *ctx,
                      int16_t *pcm_out,
                      int frame_size) {
     if (!ctx->initialized) {
-        fprintf(stderr, "Decoder not initialized\n");
+        fprintf(stderr, "Decoder not initialised\n");
         return -1;
     }
     

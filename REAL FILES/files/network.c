@@ -45,7 +45,7 @@ int network_init(network_ctx_t *ctx, uint32_t board_id) {
     inet_pton(AF_INET, MULTICAST_ADDR, &ctx->multicast_addr.sin_addr);
 
     ctx->initialized = true;
-    printf("Network initialized: %s:%d (Board ID: %u)\n", MULTICAST_ADDR, MULTICAST_PORT, board_id);
+    printf("Network initialised: %s:%d (Board ID: %u)\n", MULTICAST_ADDR, MULTICAST_PORT, board_id);
     return 0;
 }
 

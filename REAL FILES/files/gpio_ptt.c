@@ -119,7 +119,7 @@ int gpio_init(gpio_ctx_t *ctx) {
     
     ctx->initialized = true;
     
-    printf("GPIO initialized:\n");
+    printf("GPIO initialised:\n");
     printf("  PTT Button: GPIO %d\n", GPIO_PTT_PIN);
     printf("  TX LED:     GPIO %d\n", GPIO_LED_TX_PIN);
     printf("  RX LED:     GPIO %d\n", GPIO_LED_RX_PIN);

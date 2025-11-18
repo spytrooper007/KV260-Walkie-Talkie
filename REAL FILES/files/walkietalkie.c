@@ -258,7 +258,7 @@ int init_system(void) {
     // Initialize GPIO
     printf("Initializing GPIO...\n");
     if (gpio_init(&app.gpio) < 0) {
-        fprintf(stderr, "GPIO initialization failed\n");
+        fprintf(stderr, "GPIO initialisation failed\n");
         return -1;
     }
     printf("✓ GPIO ready\n\n");
@@ -266,7 +266,7 @@ int init_system(void) {
     // Initialize DMA
     printf("Initializing DMA...\n");
     if (dma_init(&app.dma) < 0) {
-        fprintf(stderr, "DMA initialization failed\n");
+        fprintf(stderr, "DMA initialisation failed\n");
         gpio_cleanup(&app.gpio);
         return -1;
     }
@@ -281,7 +281,7 @@ int init_system(void) {
     // Initialize Opus encoder
     printf("Initializing Opus encoder...\n");
     if (opus_enc_init(&app.encoder, BITRATE) < 0) {
-        fprintf(stderr, "Opus encoder initialization failed\n");
+        fprintf(stderr, "Opus encoder initialisation failed\n");
         dma_cleanup(&app.dma);
         gpio_cleanup(&app.gpio);
         return -1;
@@ -291,7 +291,7 @@ int init_system(void) {
     // Initialize Opus decoder
     printf("Initializing Opus decoder...\n");
     if (opus_dec_init(&app.decoder) < 0) {
-        fprintf(stderr, "Opus decoder initialization failed\n");
+        fprintf(stderr, "Opus decoder initialisation failed\n");
         opus_enc_cleanup(&app.encoder);
         dma_cleanup(&app.dma);
         gpio_cleanup(&app.gpio);
@@ -302,7 +302,7 @@ int init_system(void) {
     // Initialize network
     printf("Initializing network...\n");
     if (network_init(&app.net, app.board_id) < 0) {
-        fprintf(stderr, "Network initialization failed\n");
+        fprintf(stderr, "Network initialisation failed\n");
         opus_dec_cleanup(&app.decoder);
         opus_enc_cleanup(&app.encoder);
         dma_cleanup(&app.dma);
@@ -362,7 +362,7 @@ int main(int argc, char *argv[]) {
     
     // Initialize system
     if (init_system() < 0) {
-        fprintf(stderr, "System initialization failed\n");
+        fprintf(stderr, "System initialisation failed\n");
         return 1;
     }
     

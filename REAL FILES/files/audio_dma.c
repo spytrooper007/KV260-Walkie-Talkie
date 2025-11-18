@@ -79,7 +79,7 @@ int dma_init(dma_ctx_t *ctx) {
     
     ctx->initialized = true;
     
-    printf("DMA initialized:\n");
+    printf("DMA initialised:\n");
     printf("  Registers: 0x%08X\n", DMA_BASE_ADDR);
     printf("  RX Buffer: 0x%08X\n", ctx->rx_phys_addr);
     printf("  TX Buffer: 0x%08X\n", ctx->tx_phys_addr);
@@ -125,7 +125,7 @@ int dma_reset(dma_ctx_t *ctx) {
 // Start audio capture (microphone -> memory)
 int dma_start_capture(dma_ctx_t *ctx, int32_t *buffer, size_t bytes) {
     if (!ctx->initialized) {
-        fprintf(stderr, "DMA not initialized\n");
+        fprintf(stderr, "DMA not initialised\n");
         return -1;
     }
     
@@ -144,7 +144,7 @@ int dma_start_capture(dma_ctx_t *ctx, int32_t *buffer, size_t bytes) {
 // Start audio playback (memory -> speaker)
 int dma_start_playback(dma_ctx_t *ctx, const int32_t *buffer, size_t bytes) {
     if (!ctx->initialized) {
-        fprintf(stderr, "DMA not initialized\n");
+        fprintf(stderr, "DMA not initialised\n");
         return -1;
     }
     
