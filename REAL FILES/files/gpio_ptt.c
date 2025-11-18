@@ -8,18 +8,18 @@
 
 #define GPIO_PATH "/sys/class/gpio"
 
-// Helper: Export GPIO pin
+// Helper function to export a GPIO pin
 static int gpio_export(int pin) {
     char path[64];
     int fd;
     
-    // Check if already exported
+    // Checks if the pin is already exporteed or not
     snprintf(path, sizeof(path), GPIO_PATH "/gpio%d", pin);
     if (access(path, F_OK) == 0) {
         return 0;  // Already exported
     }
     
-    // Export pin
+    // Otherwise, write the pin number to the export file
     fd = open(GPIO_PATH "/export", O_WRONLY);
     if (fd < 0) {
         perror("gpio_export open");
@@ -37,16 +37,21 @@ static int gpio_export(int pin) {
     }
     
     close(fd);
-    usleep(100000);  // Wait for GPIO to be ready
+
+    // Small delay to allow sysfs to create the gpio directory
+    usleep(100000);
     return 0;
 }
 
-// Helper: Set GPIO direction
+// Helper function to set GPIO direction
 static int gpio_set_direction(int pin, const char *direction) {
     char path[64];
     int fd;
     
+    // /gpioXX/value is the file we need to read/write the pin value
     snprintf(path, sizeof(path), GPIO_PATH "/gpio%d/direction", pin);
+
+    // Open the GPIO direction to write in or out
     fd = open(path, O_WRONLY);
     if (fd < 0) {
         perror("gpio_set_direction open");
@@ -63,11 +68,13 @@ static int gpio_set_direction(int pin, const char *direction) {
     return 0;
 }
 
-// Helper: Open GPIO value file
+// Helper function to return a file descriptor for GPIO value
 static int gpio_open_value(int pin) {
     char path[64];
+
     snprintf(path, sizeof(path), GPIO_PATH "/gpio%d/value", pin);
     
+    // Keeps the FD open for fast access instread of needing to open and close every single time
     int fd = open(path, O_RDWR);
     if (fd < 0) {
         perror("gpio_open_value");
@@ -79,6 +86,7 @@ static int gpio_open_value(int pin) {
 
 // Initialize GPIO
 int gpio_init(gpio_ctx_t *ctx) {
+    // Clear the context structure
     memset(ctx, 0, sizeof(gpio_ctx_t));
     
     // Export pins
@@ -134,8 +142,10 @@ bool gpio_read_ptt(gpio_ctx_t *ctx) {
     }
     
     char buf[2];
+    // Move the file pointer back to the start before reading because we didn't close the file
     lseek(ctx->ptt_fd, 0, SEEK_SET);
     
+    // Now we can finally read one character to get the value
     if (read(ctx->ptt_fd, buf, 1) != 1) {
         return false;
     }
@@ -143,6 +153,7 @@ bool gpio_read_ptt(gpio_ctx_t *ctx) {
     return buf[0] == '1';
 }
 
+// Write to the GPIO value file
 static int safe_write(int fd, const char *buf, size_t count) {
     ssize_t result = write(fd, buf, count);
     if (result < 0) {
@@ -156,12 +167,14 @@ static int safe_write(int fd, const char *buf, size_t count) {
 void gpio_set_tx_led(gpio_ctx_t *ctx, bool on) {
     if (!ctx->initialized || ctx->led_tx_fd < 0) return;
     
+    // Turn on and off the LED by writing '1' or '0' to the value file
     const char *value = on ? "1" : "0";
     if (safe_write(ctx->led_tx_fd, value, 1) < 0) {
         fprintf(stderr, "Failed to set TX LED\n");
     }
 }
 
+// Same thing really for RX LED
 void gpio_set_rx_led(gpio_ctx_t *ctx, bool on) {
     if (!ctx->initialized || ctx->led_rx_fd < 0) return;
     

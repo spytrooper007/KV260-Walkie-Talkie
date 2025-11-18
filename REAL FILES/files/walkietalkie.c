@@ -69,7 +69,7 @@ typedef struct {
     pthread_t tx_thread;
     pthread_t rx_thread;
     
-    // Statistics
+    // Stats and that
     uint64_t frames_sent;
     uint64_t frames_received;
     uint64_t frames_dropped;
@@ -151,10 +151,10 @@ void *tx_thread_func(void *arg) {
                 }
             }
             
-            // Maintain ~20ms frame timing
-            usleep(18000);  // Slightly less than 20ms to account for processing
+            // Maintain the ~20ms frame timing
+            usleep(18000);
         } else {
-            // Not transmitting - poll PTT at lower rate
+            // Not transmitting, sleep timeeee
             usleep(10000);
         }
         

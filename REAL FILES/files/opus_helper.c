@@ -7,6 +7,11 @@
 int opus_enc_init(opus_enc_ctx_t *ctx, int bitrate) {
     int error;
     
+    // Create the Opus encoder
+    // CHANNELS and SAMPLE_RATE are for mono 44kHz audio
+    // OPUS_APPLICATION_VOIP is optimized for voice
+    // &error will hold any error code
+
     ctx->encoder = opus_encoder_create(SAMPLE_RATE, CHANNELS, 
                                        OPUS_APPLICATION_VOIP, &error);
     if (error != OPUS_OK) {
@@ -16,15 +21,24 @@ int opus_enc_init(opus_enc_ctx_t *ctx, int bitrate) {
     }
     
     // Set bitrate
+    // opus_encoder_ctl is used to configure various parameters of the encoder
     opus_encoder_ctl(ctx->encoder, OPUS_SET_BITRATE(bitrate));
     ctx->bitrate = bitrate;
     
     // Optimize for low latency
+    // OPUS_SIGNAL_VOICE indicates voice signal
+    // Complexity is the encoding effort that Opus will use
+    // Complexity 5 is a good trade-off between quality and CPU
+    // Opus DTX (Discontinuous Transmission) can be disabled for continuous audio
+
     opus_encoder_ctl(ctx->encoder, OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE));
     opus_encoder_ctl(ctx->encoder, OPUS_SET_COMPLEXITY(5));
-    opus_encoder_ctl(ctx->encoder, OPUS_SET_DTX(0));  // Disable discontinuous transmission
+    opus_encoder_ctl(ctx->encoder, OPUS_SET_DTX(0));
     
     // Enable FEC for packet loss resilience
+    // FEC (Forward Error Correction) allows recovery of lost packets
+    // OPUS_SET_PACKET_LOSS_PERC tells Opus the expected packet loss percentage
+
     opus_encoder_ctl(ctx->encoder, OPUS_SET_INBAND_FEC(1));
     opus_encoder_ctl(ctx->encoder, OPUS_SET_PACKET_LOSS_PERC(5));
     
@@ -36,6 +50,10 @@ int opus_enc_init(opus_enc_ctx_t *ctx, int bitrate) {
 }
 
 // Encode PCM samples to Opus
+// pcm_in: input PCM samples (16-bit)
+// frame_size: number of samples per channel in the input
+// opus_out: output buffer for Opus data
+// max_bytes: maximum size of the output buffer
 int opus_encode_frame(opus_enc_ctx_t *ctx, 
                       const int16_t *pcm_in,
                       int frame_size,
@@ -96,6 +114,7 @@ int opus_decode_frame(opus_dec_ctx_t *ctx,
         return -1;
     }
     
+    // pcm_out will hold the decoded samples
     int decoded_samples = opus_decode(ctx->decoder, opus_in, packet_size,
                                       pcm_out, frame_size, 0);
     

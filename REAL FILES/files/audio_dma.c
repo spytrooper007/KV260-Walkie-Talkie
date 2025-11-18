@@ -7,6 +7,13 @@
 #include <sys/mman.h>
 #include <errno.h>
 
+// MM2S (Memory to Stream): Playback (to speaker)
+// S2MM (Stream to Memory): Capture (from microphone)
+// CTRL: Start/reset/control
+// STATUS: Flags about DMA status
+// SA/DA: Source/Destination addresses
+// LENGTH: How many bytes to transfer
+
 // DMA Register Offsets
 #define MM2S_CTRL       0x00
 #define MM2S_STATUS     0x04
@@ -18,6 +25,12 @@
 #define S2MM_DA         0x48
 #define S2MM_LENGTH     0x58
 
+// CTRL_RUN: Start DMA
+// CTRL_RESET: Reset DMA channel
+// STAT_HALTED: DMA stopped
+// STAT_IDLE: DMA is idle
+// STAT_IOC: Interrupt on completion flag
+
 // Control register bits
 #define CTRL_RUN        0x00000001
 #define CTRL_RESET      0x00000004
@@ -25,9 +38,11 @@
 // Status register bits
 #define STAT_HALTED     0x00000001
 #define STAT_IDLE       0x00000002
-#define STAT_IOC        0x00001000  // Interrupt on complete
+#define STAT_IOC        0x00001000
+
 
 // Register access macros
+// Thes are the macros that read and write to the DMA registers using pointer arithmetic
 #define DMA_WRITE(ctx, offset, value) \
     (*((volatile uint32_t *)((ctx)->dma_regs + (offset))) = (value))
 
@@ -36,16 +51,17 @@
 
 // Initialize DMA
 int dma_init(dma_ctx_t *ctx) {
+    // Clear the context structure
     memset(ctx, 0, sizeof(dma_ctx_t));
     
-    // Open /dev/mem
+    // Open /dev/mem to allow direct memory access to DMA registers and buffers
     ctx->mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
     if (ctx->mem_fd < 0) {
         perror("Failed to open /dev/mem");
         return -1;
     }
     
-    // Map DMA registers
+    // Map the DMA hardware registers into user space.
     ctx->dma_regs = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE,
                          MAP_SHARED, ctx->mem_fd, DMA_BASE_ADDR);
     if (ctx->dma_regs == MAP_FAILED) {
@@ -54,8 +70,14 @@ int dma_init(dma_ctx_t *ctx) {
         return -1;
     }
     
-    // Map RX buffer (for capture from microphone)
+    // Map RX audio buffer into virtual memory.
     ctx->rx_phys_addr = DMA_MEM_BASE;
+
+    // PROT_READ | PROT_WRITE allows reading and writing
+    // MAP_SHARED means changes are shared with other processes
+    // mem_fd is the file descriptor for /dev/mem
+    // rx_phys_addr is the physical address to map
+    
     ctx->rx_buffer = mmap(NULL, FRAME_BYTES, PROT_READ | PROT_WRITE,
                          MAP_SHARED, ctx->mem_fd, ctx->rx_phys_addr);
     if (ctx->rx_buffer == MAP_FAILED) {
@@ -89,7 +111,7 @@ int dma_init(dma_ctx_t *ctx) {
     return 0;
 }
 
-// Reset DMA channels
+// Write to reset the DMA channels and wait for them to halt
 int dma_reset(dma_ctx_t *ctx) {
     if (!ctx->initialized) {
         fprintf(stderr, "DMA not initialized\n");
@@ -101,7 +123,7 @@ int dma_reset(dma_ctx_t *ctx) {
     DMA_WRITE(ctx, MM2S_CTRL, CTRL_RESET);
     usleep(100);
     
-    // Wait for reset to complete
+    // Uses polling to wait for both channels to stop
     int timeout = 1000;
     while (timeout-- > 0) {
         uint32_t s2mm_status = DMA_READ(ctx, S2MM_STATUS);
@@ -122,39 +144,39 @@ int dma_reset(dma_ctx_t *ctx) {
     return 0;
 }
 
-// Start audio capture (microphone -> memory)
+// Start audio capture
 int dma_start_capture(dma_ctx_t *ctx, int32_t *buffer, size_t bytes) {
     if (!ctx->initialized) {
         fprintf(stderr, "DMA not initialised\n");
         return -1;
     }
     
-    // Calculate physical address
+    // Converts the virtual buffer pointer to a physical address
     uintptr_t offset = (uintptr_t)buffer - (uintptr_t)ctx->rx_buffer;
     uint32_t phys_addr = ctx->rx_phys_addr + offset;
     
-    // Start S2MM channel
+    // Then sets up and starts the S2MM channel for capture
     DMA_WRITE(ctx, S2MM_CTRL, CTRL_RUN);
     DMA_WRITE(ctx, S2MM_DA, phys_addr);
-    DMA_WRITE(ctx, S2MM_LENGTH, bytes);  // This starts the transfer
+    DMA_WRITE(ctx, S2MM_LENGTH, bytes);
     
     return 0;
 }
 
-// Start audio playback (memory -> speaker)
+// Start audio playback
 int dma_start_playback(dma_ctx_t *ctx, const int32_t *buffer, size_t bytes) {
     if (!ctx->initialized) {
         fprintf(stderr, "DMA not initialised\n");
         return -1;
     }
     
-    // Copy data to TX buffer
+    // First copy the supplied audio data into the TX buffer
     memcpy(ctx->tx_buffer, buffer, bytes);
     
     // Start MM2S channel
     DMA_WRITE(ctx, MM2S_CTRL, CTRL_RUN);
     DMA_WRITE(ctx, MM2S_SA, ctx->tx_phys_addr);
-    DMA_WRITE(ctx, MM2S_LENGTH, bytes);  // This starts the transfer
+    DMA_WRITE(ctx, MM2S_LENGTH, bytes);
     
     return 0;
 }
@@ -164,6 +186,7 @@ bool dma_capture_busy(dma_ctx_t *ctx) {
     if (!ctx->initialized) return false;
     
     uint32_t status = DMA_READ(ctx, S2MM_STATUS);
+    // Return true if not idle
     return !(status & STAT_IDLE);
 }
 
@@ -179,6 +202,7 @@ bool dma_playback_busy(dma_ctx_t *ctx) {
 int dma_wait_capture(dma_ctx_t *ctx, int timeout_ms) {
     int elapsed = 0;
     
+    // Polling loop to wait for capture to finish
     while (dma_capture_busy(ctx) && elapsed < timeout_ms) {
         usleep(100);
         elapsed++;

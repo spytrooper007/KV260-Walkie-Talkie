@@ -6,15 +6,21 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-// Network configuration
 #define MULTICAST_ADDR      "239.0.0.1"
+
+// Multicast port number
 #define MULTICAST_PORT      5000
+
+// Maximum Opus packet size
 #define MAX_OPUS_PACKET     4000
 
-// Packet structure
 typedef struct __attribute__((packed)) {
     uint32_t board_id;
+
+    // Sequence number for packet ordering
     uint32_t seq_num;
+
+    // Timestamp for when the packet was sent and microsecond part is for higher resolution
     uint32_t timestamp_sec;
     uint32_t timestamp_usec;
     uint16_t opus_size;
@@ -23,12 +29,18 @@ typedef struct __attribute__((packed)) {
     uint8_t  opus_data[MAX_OPUS_PACKET];
 } network_packet_t;
 
-// Packet flags
+// Packet flags are used to indicate special conditions
+// START: First packet of a transmission
+// END: Last packet of a transmission
+// PRIORITY: High priority packet
+
 #define PKT_FLAG_START      0x01
 #define PKT_FLAG_END        0x02
 #define PKT_FLAG_PRIORITY   0x04
 
 // Network context
+
+// tx_seq_num is the sequence number for transmitted packets
 typedef struct {
     int sockfd;
     struct sockaddr_in multicast_addr;
@@ -54,7 +66,6 @@ int network_recv(network_ctx_t *ctx,
 // Cleanup network
 void network_cleanup(network_ctx_t *ctx);
 
-// Utility: Get board ID from IP or file
 uint32_t network_get_board_id(void);
 
 #endif // NETWORK_H
