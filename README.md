@@ -12,6 +12,8 @@
 
 **Term:** T3 2025
 
+Make sure to look at the `REAL FILES` directory for the actual files!
+
 ---
 
 ## Table of contents
