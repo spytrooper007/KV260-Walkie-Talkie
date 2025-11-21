@@ -43,13 +43,23 @@ Make sure to look at the `REAL FILES` directory for the actual files!
 
 ---
 ## Project Overview
-This PetaLinux Project attempts to implement a complete embedded system featuring:
+This Project attempts to implement a complete embedded system featuring:
 - **Real-time Audio Processing:** Low-latency DMA-based audio capture and playback.
 - **Opus Compression:** Audio streaming, encoding/decoding and compression/decompression.
 - **Network Communication:** UDP audio streaming with multicast.
 - **Hardware Acceleration:** FPGA fabric for I2S audio interface.
 - **PTT Control:** Push-to-talk button with LED feedback.
 - **Embedded Linux:** PetaLinux-based OS with custom drivers and custom device tree overlay
+
+## System Architecture Overview
+The KV260 Walkie-Talkie system consists of:
+- Programmable Logic (PL) implements real-time I2S audio capture/playback.
+- Processing System (PS) runs either PetaLinux (multi-board) or Vitis bare-metal (single-board).
+- AXI DMA provides high-bandwidth audio transfer between PL and DDR.
+- Application layer handles Opus codec, networking, threads, and GPIO.
+
+### System Flow Diagram
+![System Flow](images/system_flow_final.png)
 
 ---
 
@@ -106,9 +116,6 @@ project_with_amp/
 
 - **FIFO Buffers:**  
   Used for clock-domain crossing between the I²S clock and AXI clock.
-
-- **Control Bus Modules:**  
-  Provide simple register interfaces (enable, reset, status) to the PS.
 
 - **AXI GPIO:**  
   Connects the Push-To-Talk (PTT) button and status LED to the Zynq MPSoC.
@@ -369,6 +376,7 @@ password: petalinux
 ---
 
 ### Bare Metal Implemenation
+*An alternative build:* this tests and shows the functionality of our custom walkie-talkie on one FPGA.
 
 **Prerequisites**
 - Vitis Classic
@@ -381,11 +389,14 @@ Download both the Vivado and Vitis porjects and store them in the same parent di
 **Vitis Project**
 
 Build the project by clicking on the hammer or right click and build project.
+The main functionality is in the `project_final_system/src/helloworld.c`
+- The volume of the speaker can change by changing the gain in this code
+- The nummber of recordings stored at one time can also be changed here
 
 **On the FPGA** 
 
 This is an instant audio input and playback walkie-talkie like product with additional features. 
-If you have an SD card, insert it into the SD card slot for your audio files to be saved. 
+If you have an SD card, insert it into the SD card slot for your latest 5 audio files to be saved. 
 This design can hold and store up to 5 different audio input files at once (modular design that can be changed), playback the most recent audio and switch between the latest 5 audio input files.
 
 *Modes*
