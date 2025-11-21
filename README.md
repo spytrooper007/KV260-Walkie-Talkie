@@ -243,7 +243,7 @@ Download both the Vivado and Vitis porjects and store them in the same parent di
 Build the project by clicking on the hammer or right click and build project.
 The main functionality is in the `project_final_system/src/helloworld.c`
 - The volume of the speaker can change by changing the gain in this code
-- The nummber of recordings stored at one time can also be changed here
+- The number of recordings stored at one time can also be changed here
 
 **On the FPGA** 
 
