@@ -26,6 +26,8 @@ Make sure to look at the `REAL FILES` directory for the actual files!
     - [Modules](#modules)
     - [Project Structure/Layout](#project-structurelayout)
   - [Build Instructions](#build-instructions)
+    - [Petalinux Implementation](#petalinux-implementation)
+    - [Bare Metal Implementation](#bare-metal-implemenation)
   - [Testing](#testing)
   - [Troubleshooting](#troubleshooting)
     - [1. DMA not initialising](#1-dma-not-initialising)
@@ -65,6 +67,60 @@ This PetaLinux Project attempts to implement a complete embedded system featurin
 ---
 ## Hardware Implementation
 
+The **same Vivado hardware design** is used for both:
+- the **PetaLinux** system, and  
+- the **bare-metal (Vitis)** application.
+
+All programmable-logic (PL) logic targets the **Xilinx Kria KV260** and lives in the Vivado project.
+
+### Vivado Design Overview
+
+The Vivado project (`project_with_amp/`) contains the block design and all custom VHDL used by the walkie-talkie:
+
+```text
+project_with_amp/
+├── ibr_design.bd                # Block design (PS + AXI + custom audio IP + GPIO)
+├── sources/
+│   ├── ibr_design_wrapper.v     # Top-level wrapper for the KV260 design
+│   ├── audio_pipeline.vhd       # I2S audio capture/playback pipeline
+│   ├── amplifier_pipeline.vhd   # I2S pipeline driving the external amplifier
+│   ├── ctrl_bus.vhd             # Simple control/status register interface
+│   ├── i2s_master.vhd           # I2S master for main audio path
+│   ├── i2s_master_amplifier.vhd # I2S master for amplifier path
+│   ├── fifo.vhd                 # FIFO buffer for audio_pipeline
+│   ├── fifo_amplifier.vhd       # FIFO buffer for amplifier_pipeline
+│   └── axi_gpio.vhd             # AXI GPIO for PTT button and status LED
+├── constraints/
+│   └── kria-constraints.xdc     # KV260 pin, clock and I/O constraints
+└── utils/
+    └── ibr_design_wrapper.dcp   # Design checkpoint for regenerating bitstream
+```
+### Hardware Functionality
+
+- **Audio Pipeline:**  
+  Implements I²S capture/playback for the microphone and speaker.  
+  Converts between I²S serial data and AXI-Stream for the DMA engine.
+
+- **Amplifier Pipeline:**  
+  Dedicated I²S transmitter feeding the external audio amplifier.
+
+- **FIFO Buffers:**  
+  Used for clock-domain crossing between the I²S clock and AXI clock.
+
+- **Control Bus Modules:**  
+  Provide simple register interfaces (enable, reset, status) to the PS.
+
+- **AXI GPIO:**  
+  Connects the Push-To-Talk (PTT) button and status LED to the Zynq MPSoC.
+
+### Exported Hardware (XSA)
+
+The Vivado design is exported as `project_with_amp_design_wrapper.xsa` file located in:
+project_with_amp/
+
+### Vivado Block Diagram
+
+![Vivado Block Design](images/vivado_block_design.png)
 ---
 
 ## Software Implementation
@@ -157,6 +213,8 @@ walkie_talkie_project/
 ```
 
 ## Build Instructions
+
+### Petalinux Implementation
 
 **Prerequisites**
  - Vivado with XCST: 2024.1
@@ -309,6 +367,34 @@ password: petalinux
 ./walkietalkie 192.168.1.10
 ```
 ---
+
+### Bare Metal Implemenation
+
+**Prerequisites**
+- Vitis Classic
+- Vivado with XCST: 2024.1
+
+**Setup**
+
+Download both the Vivado and Vitis porjects and store them in the same parent directory.
+
+**Vitis Project**
+
+Build the project by clicking on the hammer or right click and build project.
+
+**On the FPGA** 
+
+This is an instant audio input and playback walkie-talkie like product with additional features. 
+If you have an SD card, insert it into the SD card slot for your audio files to be saved. 
+This design can hold and store up to 5 different audio input files at once (modular design that can be changed), playback the most recent audio and switch between the latest 5 audio input files.
+
+*Modes*
+1. Long press: Hold the button (SW 1) for more than 5 seconds. The recording starts instantly and once the button is pressed for 5 seconds or longer the audio input gets saved. 
+2. Short press: Press the button (< 1 second). This plays the latest audio file. 
+3. Medium press: Press the button (> 1.5 seconds and < 3 seconds). This changes the current audio file to the audio file recorded before (if possible).
+
+LED 1 acts as a status light.
+
 ## Testing
 
 | Num | Category | Description | Pass Criteria |
