@@ -20,14 +20,20 @@ Make sure to look at the `REAL FILES` directory for the actual files!
 - [KV260 Walkie Talkie](#kv260-walkie-talkie)
   - [Table of contents](#table-of-contents)
   - [Project Overview](#project-overview)
+  - [System Architecture Overview](#system-architecture-overview)
+    - [System Flow Diagram](#system-flow-diagram)
   - [Data Flow](#data-flow)
   - [Hardware Implementation](#hardware-implementation)
+    - [Vivado Design Overview](#vivado-design-overview)
+    - [Hardware Functionality](#hardware-functionality)
+    - [Exported Hardware (XSA)](#exported-hardware-xsa)
+    - [Vivado Block Diagram](#vivado-block-diagram)
   - [Software Implementation](#software-implementation)
     - [Modules](#modules)
     - [Project Structure/Layout](#project-structurelayout)
   - [Build Instructions](#build-instructions)
-    - [Petalinux Implementation](#petalinux-implementation)
     - [Bare Metal Implementation](#bare-metal-implemenation)
+    - [PetaLinux Implementation](#petalinux-implementation)
   - [Testing](#testing)
   - [Troubleshooting](#troubleshooting)
     - [1. DMA not initialising](#1-dma-not-initialising)
@@ -221,6 +227,37 @@ walkie_talkie_project/
 
 ## Build Instructions
 
+### Bare Metal Implemenation
+This tests and shows the functionality of our custom walkie-talkie on *one* FPGA.
+
+**Prerequisites**
+- Vitis Classic
+- Vivado with XCST: 2024.1
+
+**Setup**
+
+Download both the Vivado and Vitis porjects and store them in the same parent directory.
+
+**Vitis Project**
+
+Build the project by clicking on the hammer or right click and build project.
+The main functionality is in the `project_final_system/src/helloworld.c`
+- The volume of the speaker can change by changing the gain in this code
+- The nummber of recordings stored at one time can also be changed here
+
+**On the FPGA** 
+
+This is an instant audio input and playback walkie-talkie like product with additional features. 
+If you have an SD card, insert it into the SD card slot for your latest 5 audio files to be saved. 
+This design can hold and store up to 5 different audio input files at once (modular design that can be changed), playback the most recent audio and switch between the latest 5 audio input files.
+
+*Modes*
+1. Long press: Hold the button (SW 1) for more than 5 seconds. The recording starts instantly and once the button is pressed for 5 seconds or longer the audio input gets saved. 
+2. Short press: Press the button (< 1 second). This plays the latest audio file. 
+3. Medium press: Press the button (> 1.5 seconds and < 3 seconds). This changes the current audio file to the audio file recorded before (if possible).
+
+LED 1 acts as a status light.
+
 ### Petalinux Implementation
 
 **Prerequisites**
@@ -374,37 +411,6 @@ password: petalinux
 ./walkietalkie 192.168.1.10
 ```
 ---
-
-### Bare Metal Implemenation
-*An alternative build:* this tests and shows the functionality of our custom walkie-talkie on one FPGA.
-
-**Prerequisites**
-- Vitis Classic
-- Vivado with XCST: 2024.1
-
-**Setup**
-
-Download both the Vivado and Vitis porjects and store them in the same parent directory.
-
-**Vitis Project**
-
-Build the project by clicking on the hammer or right click and build project.
-The main functionality is in the `project_final_system/src/helloworld.c`
-- The volume of the speaker can change by changing the gain in this code
-- The nummber of recordings stored at one time can also be changed here
-
-**On the FPGA** 
-
-This is an instant audio input and playback walkie-talkie like product with additional features. 
-If you have an SD card, insert it into the SD card slot for your latest 5 audio files to be saved. 
-This design can hold and store up to 5 different audio input files at once (modular design that can be changed), playback the most recent audio and switch between the latest 5 audio input files.
-
-*Modes*
-1. Long press: Hold the button (SW 1) for more than 5 seconds. The recording starts instantly and once the button is pressed for 5 seconds or longer the audio input gets saved. 
-2. Short press: Press the button (< 1 second). This plays the latest audio file. 
-3. Medium press: Press the button (> 1.5 seconds and < 3 seconds). This changes the current audio file to the audio file recorded before (if possible).
-
-LED 1 acts as a status light.
 
 ## Testing
 
